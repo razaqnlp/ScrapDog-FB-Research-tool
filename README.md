@@ -2,6 +2,11 @@
 
 ScrapDog is a Chrome Manifest V3 extension, version 1.1.2, for collecting comments and replies visible on Facebook post and Reel pages and exporting them as CSV. It is not affiliated with or endorsed by Meta or Facebook.
 
+## Demo and Overview
+
+- Watch the walkthrough video: [ScrapDog demo](https://lnkd.in/p/d5Fm-5JW)
+- Download the overview document: [ScrapDog Overview.docx](ScrapDog%20Overview.docx)
+
 ## Intended Use
 
 ScrapDog is intended by its maintainer for academic and authorized research, such as NLP research on lower-resource languages, sentiment analysis, and social-media studies. It is not intended for commercial scraping, marketing, profiling or tracking people, surveillance, or harassment. These are project-use rules; the extension does not technically enforce them.
