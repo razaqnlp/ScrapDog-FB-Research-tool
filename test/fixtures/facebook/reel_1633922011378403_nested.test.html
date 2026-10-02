@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Nested Facebook reply fixture test</title>
+</head>
+<body>
+  <h1>Production nested-reply parser test</h1>
+  <pre id="result">Running...</pre>
+  <script>
+    window.chrome = window.chrome || {};
+    window.chrome.runtime = window.chrome.runtime || {};
+    window.chrome.runtime.onMessage = { addListener() {} };
+  </script>
+  <script src="/content_script.js"></script>
+  <script>
+    (async () => {
+      const resultElement = document.getElementById('result');
+      const expected = [
+        { comment_id: '886141177568186', parent_comment_id: null, parent_user_id: null },
+        { comment_id: '1243082430647571', parent_comment_id: '886141177568186', parent_user_id: null },
+        { comment_id: '1297403582229136', parent_comment_id: '1243082430647571', parent_user_id: 'nasarkhan.nasarkhan.334' },
+        { comment_id: '1432609258265845', parent_comment_id: '1243082430647571', parent_user_id: 'nasarkhan.nasarkhan.334' },
+        { comment_id: '28417851684536148', parent_comment_id: '1243082430647571', parent_user_id: 'nasarkhan.nasarkhan.334' }
+      ];
+
+      try {
+        const response = await fetch('/test/fixtures/facebook/reel_1633922011378403_nested.html');
+        if (!response.ok) throw new Error(`Fixture load failed: ${response.status}`);
+        const fixtureRoot = document.createElement('div');
+        fixtureRoot.innerHTML = await response.text();
+        document.body.appendChild(fixtureRoot);
+        history.replaceState(null, '', '/reel/1633922011378403');
+
+        const scraper = window.__fbScraperInstance;
+        if (!scraper || typeof scraper.parseCurrentComments !== 'function') {
+          throw new Error('Production CommentScraper instance is unavailable');
+        }
+        scraper.options.includeReplies = true;
+        scraper.options.maxComments = 0;
+        scraper.scrapedComments.clear();
+        scraper.parseCurrentComments();
+
+        const records = Array.from(scraper.scrapedComments.values());
+        const actual = expected.map(({ comment_id }) => {
+          const record = records.find(item => item.realId === comment_id);
+          return {
+            comment_id,
+            author: record?.accountName || null,
+            level: record?.level || null,
+            parent_comment_id: record?.parentRealId || null,
+            parent_user_id: record?.parentUserId || null
+          };
+        });
+        const mismatches = expected.flatMap((expectedRecord, index) => {
+          const actualRecord = actual[index];
+          return ['parent_comment_id', 'parent_user_id'].flatMap(field =>
+            actualRecord[field] === expectedRecord[field] ? [] : [{
+              comment_id: expectedRecord.comment_id,
+              field,
+              expected: expectedRecord[field],
+              actual: actualRecord[field]
+            }]
+          );
+        });
+
+        const savedComments = scraper.scrapedComments;
+        const targetUserId = 'nasarkhan.nasarkhan.334';
+        const targetChild = {
+          realId: 'child',
+          accountName: 'Malik Awan',
+          userId: 'malik.awan',
+          level: 'Reply',
+          parentAuthor: 'Nasr Ullah',
+          parentUserId: targetUserId,
+          parentLevel: 'Reply',
+          parentRealId: ''
+        };
+        scraper.scrapedComments = new Map([
+          ['wrong-same-name', { realId: 'wrong-same-name', accountName: 'Nasr Ullah', userId: 'different.nasr', level: 'Reply' }],
+          ['right-identity', { realId: 'right-identity', accountName: 'Nasr Ullah', userId: targetUserId, level: 'Reply' }],
+          ['child', targetChild]
+        ]);
+        scraper.resolveReplyParents();
+        const identityDisambiguation = targetChild.parentRealId;
+        scraper.scrapedComments = savedComments;
+        if (identityDisambiguation !== 'right-identity') {
+          mismatches.push({ field: 'same-name identity disambiguation', expected: 'right-identity', actual: identityDisambiguation || null });
+        }
+
+        const report = { pass: mismatches.length === 0, expected, actual, identityDisambiguation, mismatches };
+        resultElement.textContent = JSON.stringify(report, null, 2);
+        document.documentElement.dataset.testResult = report.pass ? 'pass' : 'fail';
+        document.title = report.pass ? 'PASS - Nested reply fixture' : 'FAIL - Nested reply fixture';
+      } catch (error) {
+        const report = { pass: false, error: String(error), expected, actual: [], mismatches: [] };
+        resultElement.textContent = JSON.stringify(report, null, 2);
+        document.documentElement.dataset.testResult = 'error';
+        document.title = 'ERROR - Nested reply fixture';
+      }
+    })();
+  </script>
+</body>
+</html>

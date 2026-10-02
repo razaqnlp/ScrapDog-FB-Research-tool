@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScrapDog</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <img src="icons/ScrapDog%20logo.png" alt="ScrapDog Logo" width="42" height="42">
+        </div>
+        <div class="brand-text">
+          <h1>ScrapDog</h1>
+          <span id="appVersion" class="brand-version">Version</span>
+        </div>
+      </div>
+
+      <div id="statusBadge" class="status-indicator status-idle">
+        <span class="status-dot"></span>
+          <span id="statusLabel">Ready</span>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="card">
+        <label for="postUrl" class="input-label">
+          <span>Facebook post link</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button id="btnPaste" type="button" class="btn-text">Paste link</button>
+            <button id="btnUseCurrentTab" type="button" class="btn-text">Use this tab</button>
+          </div>
+        </label>
+
+        <div class="input-group">
+          <input type="url" id="postUrl" placeholder="Paste a Facebook post URL" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="collection-query-field">
+          <label class="input-label" for="collectionQueryKey">Collection query</label>
+          <div class="collection-query-row">
+            <input id="collectionQueryKey" class="collection-query-input" type="text" placeholder="hashtag" autocomplete="off">
+            <span class="collection-query-separator" aria-hidden="true">:</span>
+            <input id="collectionQueryValue" class="collection-query-input" type="text" placeholder="#pashtofunny" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="input-checkbox-row">
+          <label class="custom-checkbox-label" for="chkIncludeReplies">
+            <input type="checkbox" id="chkIncludeReplies" checked>
+            <span class="custom-checkbox-box">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </span>
+            <span class="checkbox-title">Include replies</span>
+          </label>
+
+          <span class="info-tooltip-btn" tabindex="0">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span class="info-tooltip-text">When checked, extracts nested discussion replies. Uncheck to only scrape top-level comments.</span>
+          </span>
+        </div>
+      </section>
+
+      <section class="card options-card">
+        <div class="options-header" id="optionsToggle">
+          <div class="options-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span>Collection settings</span>
+          </div>
+          <span class="chevron" id="chevronIcon">▼</span>
+        </div>
+
+        <div class="options-body" id="optionsBody">
+          <div class="option-row">
+            <div class="option-label-wrap">
+              <label for="optMaxComments">Comment limit</label>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Set the maximum number of comments to collect, or choose Unlimited for the full thread.</span>
+              </span>
+            </div>
+            <select id="optMaxComments" class="select-input">
+              <option value="100">100 comments</option>
+              <option value="250">250 comments</option>
+              <option value="500">500 comments</option>
+              <option value="1000">1,000 comments</option>
+              <option value="0" selected>Unlimited (All)</option>
+            </select>
+          </div>
+
+          <div class="option-row">
+            <div class="option-label-wrap">
+              <label for="optSpeed">Loading pace</label>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Choose how quickly comments load. Use Safe for long threads.</span>
+              </span>
+            </div>
+            <select id="optSpeed" class="select-input">
+              <option value="1600">Safe (1.6s delay)</option>
+              <option value="1100" selected>Normal (1.1s delay)</option>
+              <option value="700">Fast (0.7s delay)</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <div class="option-label-wrap">
+              <span class="toggle-label">Include replies</span>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Collect replies nested under each comment.</span>
+              </span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="optIncludeReplies" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-row">
+            <div class="option-label-wrap">
+              <span class="toggle-label">Expand full comment text</span>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Expand shortened comments before saving them.</span>
+              </span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="optExpandSeeMore" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="option-row">
+            <div class="option-label-wrap">
+              <label for="optCommentFilter">Comment order</label>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Choose which Facebook comment order to collect.</span>
+              </span>
+            </div>
+            <select id="optCommentFilter" class="select-input">
+              <option value="all_comments" selected>All Comments</option>
+              <option value="newest">Newest</option>
+              <option value="most_relevant">Most Relevant</option>
+            </select>
+          </div>
+
+          <div class="toggle-row">
+            <div class="option-label-wrap">
+              <span class="toggle-label">Close Messenger interruptions</span>
+              <span class="info-tooltip-btn" tabindex="0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span class="info-tooltip-text">Close Messenger chats that cover the comment thread.</span>
+              </span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="optAutoCloseChats" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="card options-card">
+        <div class="options-header" id="historyToggle">
+          <div class="options-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Recent collections</span>
+          </div>
+          <span class="chevron" id="historyChevronIcon">▼</span>
+        </div>
+
+        <div class="options-body" id="historyBody">
+          <div id="historyContentView" class="history-content-view">
+            <div class="history-table-wrap">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Post ID</th>
+                    <th>Date</th>
+                    <th>Sort Order</th>
+                    <th>Include Replies</th>
+                    <th>Collected</th>
+                    <th class="th-action">Download</th>
+                    <th class="th-action">Delete</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+              </table>
+            </div>
+
+            <div id="historyEmptyState" class="history-empty-state hidden">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="opacity:0.5; margin-bottom:4px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>Your saved collections will appear here for 30 days.</span>
+            </div>
+
+            <div class="history-footer">
+              <span id="historyCountLabel" class="history-count-label">0 collections saved · 30-day history</span>
+              <button id="btnClearHistory" type="button" class="btn-clear-history" title="Remove all saved collections">
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="action-buttons">
+        <button id="btnStart" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Start scraping
+        </button>
+        <button id="btnStop" class="btn btn-danger hidden">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12"></rect>
+          </svg>
+          Stop and keep results
+        </button>
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <span>ScrapDog · Comment export</span>
+    </footer>
+  </div>
+
+  <script src="csv_exporter.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

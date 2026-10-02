@@ -1,0 +1,9 @@
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Local logs and package artifacts
+*.log
+*.crx
+*.zip
+node_modules/

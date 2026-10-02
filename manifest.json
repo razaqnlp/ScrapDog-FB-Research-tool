@@ -1,0 +1,38 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "icons/ScrapDog logo.png",
+         "16": "icons/ScrapDog logo.png",
+         "32": "icons/ScrapDog logo.png",
+         "48": "icons/ScrapDog logo.png"
+      },
+      "default_popup": "popup.html",
+      "default_title": "ScrapDog"
+   },
+   "background": {
+      "service_worker": "background.js"
+   },
+   "content_scripts": [ {
+      "js": [ "csv_exporter.js", "content_script.js" ],
+      "matches": [ "*://*.facebook.com/*", "*://*.fb.com/*" ],
+      "run_at": "document_idle"
+   } ],
+   "description": "Scrapes comments from Facebook and social posts, expands replies and full text, updates progress live, and exports to CSV.",
+   "host_permissions": [ "*://*.facebook.com/*", "*://*.fb.com/*" ],
+   "icons": {
+      "128": "icons/ScrapDog logo.png",
+      "16": "icons/ScrapDog logo.png",
+      "32": "icons/ScrapDog logo.png",
+      "48": "icons/ScrapDog logo.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxUnFeCynMfi5VPUg0WMKSo5/r1wyEenqax8kkbFDmPyi59BpAaNWgSUXIiYQamsECOosx3TBeQyemwx9U0Lj4n7JMliSSvxAVfZppCOSCU7K9RoQCX0DT3tDS8+ckU4G5VD0KXw8pkN7wEzxrZHR8R0ft0sPrOI17AQJnO7V+jM80bb/IOl/pnSNUyu1ldyIq67F47LtJ/W80R42BEQtVg+MXPjGMjki9rgCK/pOweaKRUwDFQF5/VVMq6gOn9sOSvaH4+i3JSwzA2VFtFAVGQ8WLZsuZTtKDJMeZEIrrMZZQPxSRYNLxsZgqz9rWN4ro4J22iMfv+cjp/DlJIyYiwIDAQAB",
+   "manifest_version": 3,
+   "name": "ScrapDog",
+   "permissions": [ "tabs", "activeTab", "scripting", "storage", "unlimitedStorage", "downloads" ],
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "1.1.2",
+   "web_accessible_resources": [ {
+      "matches": [ "*://*.facebook.com/*", "*://*.fb.com/*" ],
+      "resources": [ "csv_exporter.js", "icons/*.png" ]
+   } ]
+}

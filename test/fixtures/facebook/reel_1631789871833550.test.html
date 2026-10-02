@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Facebook comment fixture test</title>
+</head>
+<body>
+  <h1>Production extractor fixture test</h1>
+  <pre id="result">Running...</pre>
+  <script>
+    window.chrome = window.chrome || {};
+    window.chrome.runtime = window.chrome.runtime || {};
+    window.chrome.runtime.onMessage = { addListener() {} };
+  </script>
+  <script src="/csv_exporter.js"></script>
+  <script src="/content_script.js"></script>
+  <script>
+    (async () => {
+      const resultElement = document.getElementById('result');
+      const fixturePath = '/test/fixtures/facebook/reel_1631789871833550.html';
+      const expectedPath = '/test/fixtures/facebook/reel_1631789871833550.expected.json';
+
+      try {
+        const [fixtureResponse, expectedResponse] = await Promise.all([
+          fetch(fixturePath),
+          fetch(expectedPath)
+        ]);
+        if (!fixtureResponse.ok || !expectedResponse.ok) {
+          throw new Error(`Fixture load failed: HTML ${fixtureResponse.status}, expected ${expectedResponse.status}`);
+        }
+
+        const [fixtureHtml, expected] = await Promise.all([
+          fixtureResponse.text(),
+          expectedResponse.json()
+        ]);
+        const fixtureRoot = document.createElement('div');
+        fixtureRoot.innerHTML = fixtureHtml;
+        document.body.appendChild(fixtureRoot);
+        history.replaceState(null, '', '/reel/1631789871833550');
+
+        const scraper = window.__fbScraperInstance;
+        if (!scraper || typeof scraper.parseCurrentComments !== 'function') {
+          throw new Error('Production CommentScraper instance is unavailable');
+        }
+        scraper.options.includeReplies = true;
+        scraper.options.maxComments = 0;
+        scraper.scrapedComments.clear();
+        scraper.parseCurrentComments();
+
+        const extracted = Array.from(scraper.scrapedComments.values());
+        const exportColumns = [
+          'record_type',
+          'comment_id',
+          'parent_comment_id',
+          'published_at',
+          'id_status',
+          'author_id_type',
+          'like_count',
+          'manual_review',
+          'collected_at'
+        ].map(key => ({ key, label: key }));
+        const csv = await CSVExporter.generateCSV(extracted, exportColumns);
+        const csvRows = csv.replace(/^\uFEFF/, '').split('\r\n').map(row => row.split(','));
+        const headers = csvRows.shift();
+        const csvRecords = csvRows.map(row => Object.fromEntries(headers.map((key, index) => [key, row[index] || ''])));
+        const actual = csvRecords.map((record, index) => {
+          const value = key => {
+            const cell = record[key] || '';
+            return CSVExporter.idLikeColumns.has(key) && cell.startsWith("'") ? cell.slice(1) : cell;
+          };
+          return {
+          record_type: value('record_type'),
+          comment_id: value('comment_id'),
+          parent_comment_id: value('parent_comment_id') || null,
+          published_at: value('published_at'),
+          id_status: value('id_status'),
+          author_id_type: value('author_id_type'),
+          author_source: extracted[index]?.userId === 'N/A' ? '' : extracted[index]?.userId || '',
+          like_count: value('like_count'),
+          manual_review: value('manual_review'),
+          collected_at: value('collected_at')
+          };
+        });
+
+        const mismatches = [];
+        const recordCount = Math.max(expected.length, actual.length);
+        for (let recordIndex = 0; recordIndex < recordCount; recordIndex++) {
+          const expectedRecord = expected[recordIndex];
+          const actualRecord = actual[recordIndex];
+          if (!expectedRecord || !actualRecord) {
+            mismatches.push({
+              record: recordIndex + 1,
+              field: 'record',
+              expected: expectedRecord || null,
+              actual: actualRecord || null
+            });
+            continue;
+          }
+          for (const field of Object.keys(expectedRecord)) {
+            if (actualRecord[field] !== expectedRecord[field]) {
+              mismatches.push({
+                record: recordIndex + 1,
+                field,
+                expected: expectedRecord[field],
+                actual: actualRecord[field]
+              });
+            }
+          }
+          if (Date.parse(actualRecord.published_at) > Date.parse(actualRecord.collected_at)) {
+            mismatches.push({
+              record: recordIndex + 1,
+              field: 'published_at <= collected_at',
+              expected: `published_at no later than ${actualRecord.collected_at}`,
+              actual: actualRecord.published_at
+            });
+          }
+        }
+
+        const report = {
+          pass: mismatches.length === 0,
+          actual,
+          mismatches
+        };
+        resultElement.textContent = JSON.stringify(report, null, 2);
+        document.documentElement.dataset.testResult = report.pass ? 'pass' : 'fail';
+        document.title = report.pass ? 'PASS - Facebook comment fixture' : 'FAIL - Facebook comment fixture';
+      } catch (error) {
+        const report = { pass: false, error: String(error), actual: [], mismatches: [] };
+        resultElement.textContent = JSON.stringify(report, null, 2);
+        document.documentElement.dataset.testResult = 'error';
+        document.title = 'ERROR - Facebook comment fixture';
+      }
+    })();
+  </script>
+</body>
+</html>
